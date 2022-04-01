@@ -7,23 +7,21 @@ const router = express.Router();
 // no more chirpstore! install mysql from npm and configure the routes to use that instead of chirpstore.
 
 // REST API
-router.get("/", async (req, res) => {
+router.get("/:id?", async (req, res) => {
+    let id = req.params.id;
     try {
-        res.json(await db.Chirps.all());
+        if (id) {
+            res.json((await db.Chirps.one(id))[0]);
+        } else {
+            res.json(await db.Chirps.all());
+        }
+
     } catch (e) {
         console.log(e);
         res.sendStatus(500);
     }
 });
 
-router.get("/:id", async (req, res) => {
-    try {
-        res.json((await db.Chirps.one(req.params.id))[0]);
-    } catch (e) {
-        console.log(e);
-        res.sendStatus(500);
-    }
-});
 
 
 // Create

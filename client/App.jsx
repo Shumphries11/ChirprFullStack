@@ -6,49 +6,77 @@ import ChirpCard from "./components/ChirpCard.jsx";
 const App = () => {
   const [username, setUsername] = useState("");
   const [message, setMessage] = useState("");
-  const [chirpr, setchirpr] = useState({});
-  const [chirps, setChirps] = useState([
-    {
-      id: uuidv4(),
-      username: "Josh",
-      message: "This is the chirp body!",
-      created: moment().format("dddd, MMMM Do YYYY, h:mm:ss a"),
-    },
-    {
-      id: uuidv4(),
-      username: "Haylee",
-      message: "Hello!",
-      created: moment().format("dddd, MMMM Do YYYY, h:mm:ss a"),
-    },
-    {
-      id: uuidv4(),
-      username: "Garrett",
-      message: "I'm not mad!",
-      created: moment().format("dddd, MMMM Do YYYY, h:mm:ss a"),
-    },
-  ]);
+  const [chirps, setChirps] = useState([]);
+
+  const fetchChirps = () => {
+    fetch('http://localhost:3000/api/chirps')
+      .then(res => res.json())
+      .then(chirps => setChirps(chirps))
+      .catch(err => console.log(err))
+  };
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/chirps')
-    .then(res => res.json())
-    .then(chirps => setchirpr(chirps))
-    .catch(err => alert(err))   
-  },[]);
+    fetchChirps();
+  }, [])
 
   const handleUsernameChange = (e) => setUsername(e.target.value);
   const handleMessageChange = (e) => setMessage(e.target.value);
-  const handleChirpSubmit = (e) => {
+  const handleChirpSubmit = async (e) => {
     e.preventDefault();
 
     const newChirp = {
-      id: uuidv4(),
-      username: username,
-      message: message,
-      created: moment().format("dddd, MMMM Do YYYY, h:mm:ss a"),
+      userid: 1,
+      content: message,
+      location: 'Bham'
     };
 
-    setChirps([...chirps, newChirp]);
+    try {
+      const add = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(newChirp)
+      }
+      const res = await fetch("http://localhost:3000/api/chirps", add);
+      const data = await res.json();
+      return data;
+
+    } catch (error) {
+      console.log(error);
+    }
+
+    fetchChirps();
   };
+
+  const handleDeleteChirp = (id) => {
+    fetch(`http://localhost:3000/api/chirps/` + id, {
+      method: "DELETE"
+    });
+
+    fetchChirps();
+  }
+
+  // const handleUpdateChirp = async (id, content) => {
+  //   try {
+  //     const res = await fetch(`http://localhost:3000/api/chirps/${id}`, {
+  //       method: "PUT",
+  //       headers: {
+  //         "Content-Type": "application/json"
+  //       },
+  //       body: JSON.stringify(content)
+  //     })
+  //     const data = await res.json();
+  //     return data;
+
+
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+
+  //   fetchChirps();
+  // }
+
 
   return (
     <>
@@ -78,8 +106,8 @@ const App = () => {
               />
               <textarea
                 className="form-control mb-2"
-                              aria-label="With textarea"
-                              placeholder="(500 characters max)"
+                aria-label="With textarea"
+                placeholder="(500 characters max)"
                 value={message}
                 onChange={handleMessageChange}
                 cols="30"
@@ -94,9 +122,11 @@ const App = () => {
             {chirps.map((chirp) => (
               <ChirpCard
                 key={chirp.id}
-                username={chirp.username}
-                message={chirp.message}
-                created={chirp.created}
+                id={chirp.id}
+                content={chirp.content}
+                _created={chirp._created}
+                // handleUpdateChirp={handleUpdateChirp}
+                handleDeleteChirp={handleDeleteChirp}
               />
             ))}
           </div>
